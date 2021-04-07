@@ -1,0 +1,13 @@
+[
+   {
+      "uuid":"89:81:70:2a:f4:c9",
+      "value":{
+         "blockiness":"2.1",
+         "spatial_activity":"12.1",
+         "block_loss":"3.2",
+         "blur":"3.2",
+         "temporal_activity":"3.2"
+      },
+      "timestamp":"1616587589.073796"
+   }
+]

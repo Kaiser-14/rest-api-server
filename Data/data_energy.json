@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1, 
+    "active_power": 2.4, 
+    "current": 5.4,     
+    "power_factor": 6.5, 
+    "voltage": 2.1
+  }, 
+  { 
+    "id": 2, 
+    "active_power": 5.3, 
+    "current": 44.3,
+    "power_factor": 6.5, 
+    "voltage": 3.2
+  }, 
+  {
+    "id": 3, 
+    "active_power": 4.3, 
+    "current": 5.34, 
+    "power_factor": 2.1, 
+    "voltage": 3.2
+  }, 
+  {
+    "id": 4, 
+    "active_power": 4.32, 
+    "current": 4.3, 
+    "power_factor": 4.32, 
+    "voltage": 4.23
+  }, 
+  { 
+    "id": 5, 
+    "active_power": 6.4, 
+    "current": 4.32,
+    "power_factor": 6.5, 
+    "voltage": 5.64
+  }, 
+  {
+    "id": 6,
+    "active_power": 6.8, 
+    "current": 9.8,  
+    "power_factor": 0.2, 
+    "voltage": 15.4
+  }
+]

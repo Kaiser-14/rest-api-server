@@ -1,10 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_restful import reqparse, abort, Api, Resource
-import logging
-import json
 import os
+import json
 
 app = Flask('API')
+app.config['JSON_SORT_KEYS'] = False  # Prevent sort data and keys
 api = Api(app)
 os.environ['FLASK_ENV']="development"
 # Remove log requests in the terminal
@@ -12,73 +12,198 @@ os.environ['FLASK_ENV']="development"
 # log.disabled = True
 
 DATA = {}
-file = open('Data/data_energy.json', 'r')
-DATA = json.load(file)
-
-def abort_request(item_id):
-    if item_id not in DATA:
-        abort(404, message="{} doesn't exist".format(item_id))
-
+# DATA = json.load(open('Data/data_eve.json', 'r'))
+DATA = json.load(open('Data/data_energy.json', 'r'))
 
 def start_api_server():
     app.run(debug=True, host='0.0.0.0', port=None)
+    # app.run()
 
+# http://localhost:5000/api/probe
+@app.route('/api/probe', methods=['GET'])
+def get():
+    return jsonify(DATA)
 
-# API Reference
-class Data(Resource):
-    # curl http://localhost:5000/api/probe/sensor1
-    def get(self, item_id):
-        abort_request(item_id)
-        return DATA[item_id]
+# curl -X POST -H "Content-Type: application/json" -d @Data/data_eve.json http://localhost:5000/api/probe
+@app.route('/api/probe', methods=['POST'])
+def post():
+    # Force JSON to avoid conflicts
+    req = request.get_json(force=True)
 
-    # curl http://localhost:5000/api/probe/sensor1 -X DELETE
-    def delete(self, item_id):
-        abort_request(item_id)
-        for property in DATA[item_id]:
-            DATA[item_id][property] = ""
-        return '', 204
+    try:
+        # Loop through actual data to check ID. Create new 
+        # instance only if not present ID, abort otherwise
+        if len(DATA) > 0:
+            if 'id' in DATA[0]:
+                ids = list(item['id'] for item in req)
+                for id in ids:
+                    if id in list(item['id'] for item in DATA):
+                        abort(409)
+                for item_req in req:
+                    DATA.append(item_req)
+            elif 'uuid' in DATA[0]:
+                uuids = list(item['uuid'] for item in req)
+                for uuid in uuids:
+                    if uuid in list(item['uuid'] for item in DATA):
+                        abort(409)
+                for item_req in req:
+                    DATA.append(item_req)
+        else:
+            for item in req:
+                DATA.append(item)
+    except KeyError:
+        abort(500)
 
-    # curl http://localhost:5000/api/probe/sensor1 -d "voltage=1.1&current=2.2&active_power=3.2&power_factor=4.1" -X PUT
-    def put(self, item_id):
-        abort_request(item_id)
-        for property in DATA[item_id]:
-            DATA[item_id][property] = request.form[property]
-        return DATA[item_id], 201
+    return jsonify(req), 201
 
+# curl -X PUT -H "Content-Type: application/json" -d @Data/data_eve.json http://localhost:5000/api/probe
+@app.route('/api/probe', methods=['PUT'])
+def put():
+    # Force JSON to avoid conflicts
+    req = request.get_json(force=True)
 
-class DataList(Resource):
-    # curl http://localhost:5000/api/probe
-    def get(self):
-        return DATA
+    try:
+        # Loop through data to check ID. Abort if not
+        # match every requested ID with data
+        if len(DATA) > 0:
+            if 'uuid' in DATA[0]:
+                uuids = list(item['uuid'] for item in req)
+                for uuid in uuids:
+                    if uuid not in list(item['uuid'] for item in DATA):
+                        abort(404)
+                for item in DATA:
+                    for item_req in req:
+                        if item_req['uuid'] == item['uuid']:
+                            for property in item:
+                                item[property] = item_req[property]
+            elif 'id' in DATA[0]:
+                ids = list(item['id'] for item in req)
+                for id in ids:
+                    if id not in list(item['id'] for item in DATA):
+                        abort(404)
+                for item in DATA:
+                    for item_req in req:
+                        if item_req['id'] == item['id']:
+                            for property in item:
+                                item[property] = item_req[property]
+            else:
+                abort(500)
+        else:
+            abort(404)
+    except KeyError:
+        abort(500)
 
-    # curl http://localhost:5000/api/probe -X DELETE
-    def delete(self):
-        for item_id in DATA:
-            for property in DATA[item_id]:
-                DATA[item_id][property] = ""
-        return '', 204
+    return jsonify(req), 201
 
-    # curl http://localhost:5000/api/probe -d "voltage=1.1&current=2.2&active_power=3.2&power_factor=4.1" -X PUT
-    def put(self):
-        for item_id in DATA:
-            # DATA[item_id] = request.form[item_id]
-            for property in item_id:
-                DATA[item_id][property] = request.form[property]
-        return DATA, 201
+# http://localhost:5000/api/probe -X DELETE
+@app.route('/api/probe', methods=['DELETE'])
+def delete():
+    # Clear all data
+    if len(DATA) > 0:
+        DATA.clear()
+    else:
+        abort(404)
 
-    # curl http://localhost:5000/api/probe -d "voltage=1.1&current=2.2&active_power=3.2&power_factor=4.1" -X POST
-    def post(self):
-        item_id_new = list(DATA.keys())[0][:-1] + '%d' % (len(DATA) + 1)
-        DATA[item_id_new] = {}
-        for item_id in DATA:
-            for property in DATA[item_id]:
-                DATA[item_id_new][property] = request.form[property]
-            break
-        return DATA[item_id_new], 201
+    return '', 204
 
+# curl http://localhost:5000/api/probe/1
+@app.route('/api/probe/<id>', methods=['GET'])
+def get_id(id):
 
-# API routing resources
-api.add_resource(Data, '/api/probe/<string:item_id>')
-api.add_resource(DataList, '/api/probe')
+    # Create an empty list for our results
+    results = []
+
+    # Loop through the data and match results that fit the requested ID.
+    # Abort if there is no ID in JSON data
+    try:
+        if len(DATA) > 0:
+            if 'id' in DATA[0]:
+                for item in DATA:
+                    if item['id'] == int(id):
+                        results.append(item)
+            elif 'uuid' in DATA[0]:
+                for item in DATA:
+                    if item['uuid'] == id:
+                        results.append(item)
+            if not results:
+                abort(404)
+    except KeyError:
+        abort(500)
+
+    return jsonify(results)
+
+# curl -X PUT -H "Content-Type: application/json" -d @Data/data_energy.json http://localhost:5000/api/probe/1
+@app.route('/api/probe/<id>', methods=['PUT'])
+def put_id(id):
+    # Force JSON to avoid conflicts
+    req = request.get_json(force=True)
+
+    try:
+        # ID path must match ID from data request
+        if 'id' in req[0] and len(id) == 1:
+            if int(id) != req[0]['id']:
+                abort(404)
+        elif 'uuid' in req[0]:
+            if str(id) != req[0]['uuid']:
+                abort(404)
+        else:
+            abort(500)
+
+        # Allow only one instance, as it is individual request
+        if len(req) > 1:
+            abort(404)
+
+        # Loop through data to check ID. Abort if not
+        # match requested ID with any data
+        if len(DATA) > 0:
+            if 'uuid' in DATA[0]:
+                if str(id) not in list(item['uuid'] for item in DATA):
+                    abort(404)
+                for item in DATA:
+                    for item_req in req:
+                        if item_req['uuid'] == item['uuid']:
+                            for property in item:
+                                item[property] = item_req[property]
+            elif 'id' in DATA[0]:
+                if int(id) not in list(item['id'] for item in DATA):
+                    abort(404)
+                for item in DATA:
+                    for item_req in req:
+                        if item_req['id'] == item['id']:
+                            for property in item:
+                                item[property] = item_req[property]
+            else:
+                abort(500)
+        # If no local data, use POST request to create new instance
+        else:
+            abort(404)
+
+    except KeyError:
+        abort(500)
+
+    return jsonify(req), 201
+
+# http://localhost:5000/api/probe/1 -X DELETE
+@app.route('/api/probe/<id>', methods=['DELETE'])
+def delete_id(id):
+
+    # Create an empty list for our results
+    results = []
+
+    if len(DATA) > 0:
+        if 'id' in DATA[0]:
+            for item in DATA:
+                if item['id'] == int(id):
+                    DATA.remove(item)
+                    results.append(item)
+        if 'uuid' in DATA[0]:
+            for item in DATA:
+                if item['uuid'] == id:
+                    DATA.remove(item)
+                    results.append(item)
+    if not results:
+        abort(404)
+
+    return '', 204
 
 start_api_server()

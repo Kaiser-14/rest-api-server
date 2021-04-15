@@ -42,7 +42,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 api_name = 'API'
-DATA = {}
+DATA = []
 if args.json == 'eve':
 	DATA = json.load(open('Data/data_eve.json', 'r'))
 	api_name = '5G-EVE Rest API'

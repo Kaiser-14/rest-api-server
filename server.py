@@ -3,8 +3,8 @@ import json
 import logging
 import os
 
-from flask import Flask, request, jsonify
-from flask_restful import abort, Api
+from flask import Flask, request, jsonify, abort
+from flask_restful import Api
 
 parser = argparse.ArgumentParser(description='Multimedia probe analysis.')
 parser.add_argument(
@@ -76,65 +76,65 @@ def get():
 @app.route('/api/probe', methods=['POST'])
 def post():
 	# Force JSON to avoid conflicts
-	req = request.get_json(force=True)
+	data_request = request.get_json(force=True)
 
 	try:
 		# Loop through actual data to check ID. Create new 
 		# instance only if not present ID, abort otherwise
 		if len(DATA) > 0:
 			if 'id' in DATA[0]:
-				ids = list(item['id'] for item in req)
+				ids = list(item['id'] for item in data_request)
 				for id_item in ids:
 					if id_item in list(item['id'] for item in DATA):
 						abort(409)
-				for item_req in req:
-					DATA.append(item_req)
+				for item_request in data_request:
+					DATA.append(item_request)
 			elif 'uuid' in DATA[0]:
-				uuids = list(item['uuid'] for item in req)
+				uuids = list(item['uuid'] for item in data_request)
 				for uuid in uuids:
 					if uuid in list(item['uuid'] for item in DATA):
 						abort(409)
-				for item_req in req:
-					DATA.append(item_req)
+				for item_request in data_request:
+					DATA.append(item_request)
 		else:
-			for item in req:
+			for item in data_request:
 				DATA.append(item)
 	except KeyError:
 		abort(500)
 
-	return jsonify(req), 201
+	return jsonify(data_request), 201
 
 
 # curl -X PUT -H "Content-Type: application/json" -d @Data/data_eve.json http://localhost:5000/api/probe
 @app.route('/api/probe', methods=['PUT'])
 def put():
 	# Force JSON to avoid conflicts
-	req = request.get_json(force=True)
+	data_request = request.get_json(force=True)
 
 	try:
 		# Loop through data to check ID. Abort if not
 		# match every requested ID with data
-		if len(DATA) > 0:
+		if len(DATA) == len(data_request):
 			if 'uuid' in DATA[0]:
-				uuids = list(item['uuid'] for item in req)
+				uuids = list(item['uuid'] for item in data_request)
 				for uuid in uuids:
 					if uuid not in list(item['uuid'] for item in DATA):
 						abort(404)
 				for item in DATA:
-					for item_req in req:
-						if item_req['uuid'] == item['uuid']:
+					for item_request in data_request:
+						if item_request['uuid'] == item['uuid']:
 							for property_item in item:
-								item[property_item] = item_req[property_item]
+								item[property_item] = item_request[property_item]
 			elif 'id' in DATA[0]:
-				ids = list(item['id'] for item in req)
+				ids = list(item['id'] for item in data_request)
 				for id_item in ids:
 					if id_item not in list(item['id'] for item in DATA):
 						abort(404)
 				for item in DATA:
-					for item_req in req:
-						if item_req['id'] == item['id']:
+					for item_request in data_request:
+						if item_request['id'] == item['id']:
 							for property_item in item:
-								item[property_item] = item_req[property_item]
+								item[property_item] = item_request[property_item]
 			else:
 				abort(500)
 		else:
@@ -142,7 +142,7 @@ def put():
 	except KeyError:
 		abort(500)
 
-	return jsonify(req), 200
+	return jsonify(data_request), 200
 
 
 # curl http://localhost:5000/api/probe -X DELETE
@@ -158,8 +158,8 @@ def delete():
 
 
 # curl http://localhost:5000/api/probe/1
-@app.route('/api/probe/<identification>', methods=['GET'])
-def get_id(identification):
+@app.route('/api/probe/<item_id>', methods=['GET'])
+def get_id(item_id):
 
 	# Create an empty list for our results
 	results = []
@@ -170,11 +170,11 @@ def get_id(identification):
 		if len(DATA) > 0:
 			if 'id' in DATA[0]:
 				for item in DATA:
-					if item['id'] == int(identification):
+					if item['id'] == int(item_id):
 						results.append(item)
 			elif 'uuid' in DATA[0]:
 				for item in DATA:
-					if item['uuid'] == identification:
+					if item['uuid'] == item_id:
 						results.append(item)
 			if not results:
 				abort(404)
@@ -185,60 +185,60 @@ def get_id(identification):
 
 
 # curl -X PUT -H "Content-Type: application/json" -d @Data/data_energy.json http://localhost:5000/api/probe/1
-@app.route('/api/probe/<identification>', methods=['PUT'])
-def put_id(identification):
+@app.route('/api/probe/<item_id>', methods=['PUT'])
+def put_id(item_id):
 	# Force JSON to avoid conflicts
-	req = request.get_json(force=True)
+	data_request = request.get_json(force=True)
 
 	try:
 		# ID path must match ID from data request
-		if 'id' in req[0] and len(identification) == 1:
-			if int(identification) != req[0]['id']:
-				abort(404)
-		elif 'uuid' in req[0]:
-			if str(identification) != req[0]['uuid']:
+		if 'id' in data_request[0]:
+			if int(item_id) != data_request[0]['id']:
+				abort(404, 'Requested URL ID does not correspond with provided ID in data request')
+		elif 'uuid' in data_request[0]:
+			if str(item_id) != data_request[0]['uuid']:
 				abort(404)
 		else:
 			abort(500)
 
 		# Allow only one instance, as it is individual request
-		if len(req) > 1:
+		if len(data_request) > 1:
 			abort(404)
 
 		# Loop through data to check ID. Abort if not
 		# match requested ID with any data
 		if len(DATA) > 0:
 			if 'uuid' in DATA[0]:
-				if str(identification) not in list(item['uuid'] for item in DATA):
+				if str(item_id) not in list(item['uuid'] for item in DATA):
 					abort(404)
 				for item in DATA:
-					for item_req in req:
-						if item_req['uuid'] == item['uuid']:
+					for item_request in data_request:
+						if item_request['uuid'] == item['uuid']:
 							for property_item in item:
-								item[property_item] = item_req[property_item]
+								item[property_item] = item_request[property_item]
 			elif 'id' in DATA[0]:
-				if int(identification) not in list(item['id'] for item in DATA):
+				if int(item_id) not in list(item['id'] for item in DATA):
 					abort(404)
 				for item in DATA:
-					for item_req in req:
-						if item_req['id'] == item['id']:
+					for item_request in data_request:
+						if item_request['id'] == item['id']:
 							for property_item in item:
-								item[property_item] = item_req[property_item]
+								item[property_item] = item_request[property_item]
 			else:
 				abort(500)
 		# If no local data, use POST request to create new instance
 		else:
-			abort(404)
+			abort(404, 'No local data available to update')
 
 	except KeyError:
 		abort(500)
 
-	return jsonify(req), 200
+	return jsonify(data_request), 200
 
 
 # curl http://localhost:5000/api/probe/1 -X DELETE
-@app.route('/api/probe/<identification>', methods=['DELETE'])
-def delete_id(identification):
+@app.route('/api/probe/<item_id>', methods=['DELETE'])
+def delete_id(item_id):
 
 	# Create an empty list for our results
 	results = []
@@ -246,12 +246,12 @@ def delete_id(identification):
 	if len(DATA) > 0:
 		if 'id' in DATA[0]:
 			for item in DATA:
-				if item['id'] == int(identification):
+				if item['id'] == int(item_id):
 					DATA.remove(item)
 					results.append(item)
 		if 'uuid' in DATA[0]:
 			for item in DATA:
-				if item['uuid'] == identification:
+				if item['uuid'] == item_id:
 					DATA.remove(item)
 					results.append(item)
 	if not results:

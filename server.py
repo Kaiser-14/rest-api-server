@@ -160,7 +160,6 @@ def delete():
 # curl http://localhost:5000/api/probe/1
 @app.route('/api/probe/<item_id>', methods=['GET'])
 def get_id(item_id):
-
 	# Create an empty list for our results
 	results = []
 
@@ -239,7 +238,6 @@ def put_id(item_id):
 # curl http://localhost:5000/api/probe/1 -X DELETE
 @app.route('/api/probe/<item_id>', methods=['DELETE'])
 def delete_id(item_id):
-
 	# Create an empty list for our results
 	results = []
 
@@ -258,6 +256,17 @@ def delete_id(item_id):
 		abort(404)
 
 	return '', 204
+
+
+# curl http://localhost:5000/api/probe/shutdown
+@app.route('/api/probe/shutdown', methods=['GET'])
+def shutdown_server():
+	shutdown = request.environ.get('werkzeug.server.shutdown')
+	if shutdown is None:
+		raise RuntimeError('The function is unavailable')
+	else:
+		shutdown()
+		return 'Shutting down the server...\n'
 
 
 if __name__ == '__main__':

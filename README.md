@@ -89,7 +89,9 @@ Examples of how to use the REST API
 #### Sample call
 * **Python**
 
+    ```python
     requests.get('http://localhost:5000/api/probe', headers={'Content-type': 'application/json'})
+    ```
 
 
 ### Create new data
@@ -121,7 +123,9 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.post('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
+    ```
 
 
 ### Update data
@@ -157,8 +161,10 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.put('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
-
+    ```
+    
 
 ### Delete everything
 `DELETE /api/probe`
@@ -180,8 +186,10 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.delete('http://localhost:5000/api/probe', headers={'Content-type': 'application/json'})
-
+    ```
+    
 
 ### Get specific item by ID
 `GET /api/probe/<item_id>`
@@ -201,8 +209,10 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.get('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})
-
+    ```
+    
 
 ### Update specific item by ID
 `PUT /api/probe/<item_id>`
@@ -242,6 +252,7 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.put('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
 
 
@@ -265,6 +276,7 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.delete('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})
 
 
@@ -290,4 +302,6 @@ OR
 #### Sample call
 * **Python**
 
+    ```python
     requests.get('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})
+    ```

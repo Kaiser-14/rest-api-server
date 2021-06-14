@@ -89,7 +89,6 @@ Examples of how to use the REST API
 #### Sample call
 * **Python**
 
-
     requests.get('http://localhost:5000/api/probe', headers={'Content-type': 'application/json'})
 
 
@@ -121,7 +120,6 @@ OR
     
 #### Sample call
 * **Python**
-
 
     requests.post('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
 
@@ -158,7 +156,6 @@ OR
     
 #### Sample call
 * **Python**
-    
 
     requests.put('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
 
@@ -182,7 +179,6 @@ OR
     
 #### Sample call
 * **Python**
-    
 
     requests.delete('http://localhost:5000/api/probe', headers={'Content-type': 'application/json'})
 
@@ -204,7 +200,6 @@ OR
     
 #### Sample call
 * **Python**
-    
 
     requests.get('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})
 
@@ -246,7 +241,6 @@ OR
     
 #### Sample call
 * **Python**
-    
 
     requests.put('http://localhost:5000/api/probe', json=DATA, headers={'Content-type': 'application/json'})
 
@@ -270,13 +264,12 @@ OR
     
 #### Sample call
 * **Python**
-    
 
     requests.delete('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})
 
 
 ### Shutdown the server
-`GET/PROBE /api/probe/shutdown`
+`GET/POST /api/probe/shutdown`
 
     curl -i -H 'Content-Type: application/json' http://localhost:5000/api/probe/shutdown
 
@@ -296,6 +289,5 @@ OR
     
 #### Sample call
 * **Python**
-
 
     requests.get('http://localhost:5000/api/probe/89:81:70:2a:f4:c9', headers={'Content-type': 'application/json'})

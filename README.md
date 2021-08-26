@@ -63,7 +63,7 @@ python3 server.py -j energy
 
 ### Help
 ```bash
-python3 server.py -j [JSON] -d -n [NAME] -p [PORT]
+python3 server.py -j [JSON] -d -s [SERVER] -p [PORT]
 ```
 
 ## Documentation

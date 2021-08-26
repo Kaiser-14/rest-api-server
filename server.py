@@ -27,8 +27,8 @@ parser.add_argument(
 	nargs='?',
 	help='Quiet mode to remove received request from terminal')
 parser.add_argument(
-	'-n',
-	dest='name',
+	'-s',
+	dest='server',
 	type=str,
 	default='0.0.0.0',
 	help='Name of the host server')
@@ -37,7 +37,7 @@ parser.add_argument(
 	dest='port',
 	type=int,
 	default=5000,
-	help='Name of the host server')
+	help='Host server port')
 
 args = parser.parse_args()
 
@@ -63,7 +63,7 @@ if args.quiet:
 
 
 def start_api_server():
-	app.run(debug=args.debug, host=args.host, port=args.port)
+	app.run(debug=args.debug, host=args.server, port=args.port)
 
 
 # curl http://localhost:5000/api/probe
